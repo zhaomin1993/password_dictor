@@ -1,8 +1,8 @@
 package password_dictor
 
 import (
-  "context"
-  "fmt"
+	"context"
+	"fmt"
 )
 
 func Dictor(ctx context.Context, li [][]rune) (ch chan string, err error) {
