@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func Dictor(ctx context.Context, li [][]rune) (ch chan string, err error) {
+func Dictor(ctx context.Context, li [][]rune) (<-chan string, error) {
 	//相当于最内层循环执行的次数
 	var totalTimes = 1
 	for i := range li {
@@ -14,7 +14,7 @@ func Dictor(ctx context.Context, li [][]rune) (ch chan string, err error) {
 	if totalTimes == 0 || len(li) == 0 {
 		return nil, fmt.Errorf("bad arg")
 	}
-	ch = make(chan string)
+	ch := make(chan string)
 	go func() {
 		n := 0
 	LOOP:
@@ -36,7 +36,7 @@ func Dictor(ctx context.Context, li [][]rune) (ch chan string, err error) {
 		}
 		close(ch)
 	}()
-	return
+	return ch, nil
 }
 
 func divmod(a, b int) (int, int) {
