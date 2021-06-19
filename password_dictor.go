@@ -5,42 +5,66 @@ import (
 	"fmt"
 )
 
-func Dictor(ctx context.Context, li [][]rune) (<-chan string, error) {
+type Dictor struct {
+	ctx    context.Context
+	cancel context.CancelFunc
+	dict   [][]rune
+	out    chan string
+}
+
+func NewDictor(ctx context.Context, dict [][]rune) *Dictor {
+	newCtx, cancel := context.WithCancel(ctx)
+	return &Dictor{
+		ctx:    newCtx,
+		cancel: cancel,
+		dict:   dict,
+		out:    make(chan string),
+	}
+}
+
+func (obj *Dictor) Run() (<-chan string, error) {
 	//相当于最内层循环执行的次数
 	var totalTimes = 1
-	for i := range li {
-		totalTimes *= len(li[i])
+	for i := range obj.dict {
+		totalTimes *= len(obj.dict[i])
 	}
-	if totalTimes == 0 || len(li) == 0 {
-		return nil, fmt.Errorf("bad arg")
+	if totalTimes == 0 || len(obj.dict) == 0 {
+		return nil, fmt.Errorf("bad dict")
 	}
-	ch := make(chan string)
 	go func() {
 		n := 0
 	LOOP:
 		for n < totalTimes {
-			tmp := n
-			temRes := make([]rune, 0, len(li))
-			for i := 0; i < len(li); i++ {
-				var cur int
+			div := n
+			temRes := make([]rune, 0, len(obj.dict))
+			for i := 0; i < len(obj.dict); i++ {
+				var mod int
 				//余数就是参与计算的元素的下标,商用于计算下一个列表参与元素的下标.
-				tmp, cur = divmod(tmp, len(li[i]))
-				temRes = append(temRes, li[i][cur])
+				div, mod = divMod(div, len(obj.dict[i]))
+				temRes = append(temRes, obj.dict[i][mod])
 			}
 			select {
-			case ch <- string(temRes):
-			case <-ctx.Done():
+			case obj.out <- string(temRes):
+			case <-obj.ctx.Done():
 				break LOOP
 			}
 			n += 1
 		}
-		close(ch)
+		close(obj.out)
 	}()
-	return ch, nil
+	return obj.out, nil
 }
 
-func divmod(a, b int) (int, int) {
-	c := a / b
-	d := a % b
-	return c, d
+func (obj *Dictor) Stop() {
+	select {
+	case <-obj.ctx.Done():
+	default:
+		obj.cancel()
+	}
+}
+
+func divMod(a, b int) (c, d int) {
+	c = a / b
+	d = a % b
+	return
 }

@@ -14,7 +14,7 @@ func TestDictor(t *testing.T) {
 	var li4 = []rune("0189")
 	var li5 = []rune("0123456789")
 	var li6 = []rune("0123456789")
-	ch, err := Dictor(ctx, [][]rune{li1, li2, li3, li4, li5, li6})
+	ch, err := NewDictor(ctx, [][]rune{li1, li2, li3, li4, li5, li6}).Run()
 	if err != nil {
 		t.Fatal(err)
 	}
